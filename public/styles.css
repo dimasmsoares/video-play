@@ -1,0 +1,336 @@
+:root {
+  color-scheme: dark;
+  --bg: #111312;
+  --panel: #191d1b;
+  --panel-soft: #202622;
+  --text: #f4f7f2;
+  --muted: #aeb7ae;
+  --line: #344039;
+  --accent: #e44545;
+  --accent-strong: #ff5a5a;
+  --green: #58c783;
+  --focus: #f4c95d;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  min-width: 320px;
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:focus-visible,
+input:focus-visible,
+video:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.app-shell {
+  width: min(1180px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 24px 0 56px;
+}
+
+.topbar,
+.library-tools {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.topbar {
+  margin-bottom: 20px;
+}
+
+.eyebrow {
+  margin: 0 0 6px;
+  color: var(--green);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+h1,
+h2,
+p {
+  overflow-wrap: anywhere;
+}
+
+h1 {
+  margin: 0;
+  font-size: clamp(2rem, 5vw, 3.8rem);
+  line-height: 0.98;
+}
+
+.ghost-button,
+.breadcrumbs button,
+.folder-card,
+.video-card,
+.login-form button {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--text);
+  background: var(--panel);
+}
+
+.ghost-button {
+  min-height: 44px;
+  padding: 0 18px;
+}
+
+.player-section {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+  margin-bottom: 28px;
+}
+
+video {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  max-height: 68vh;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #030303;
+}
+
+.now-playing {
+  min-height: 58px;
+}
+
+.now-playing h2,
+.section-title {
+  margin: 0;
+}
+
+.now-playing h2 {
+  font-size: clamp(1.25rem, 3vw, 2rem);
+}
+
+.library-tools {
+  margin: 18px 0 30px;
+}
+
+.breadcrumbs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.breadcrumbs button {
+  min-height: 38px;
+  padding: 0 12px;
+}
+
+.breadcrumbs button.active {
+  border-color: var(--accent);
+  color: var(--accent-strong);
+}
+
+.search-label,
+.login-form label {
+  display: grid;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.search-label {
+  width: min(340px, 100%);
+}
+
+input {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0 12px;
+  background: var(--panel-soft);
+  color: var(--text);
+}
+
+.section-title {
+  margin-bottom: 12px;
+  font-size: 1.15rem;
+}
+
+.folder-grid,
+.video-grid {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 28px;
+}
+
+.folder-grid {
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+}
+
+.video-grid {
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+}
+
+.folder-card,
+.video-card {
+  display: grid;
+  width: 100%;
+  min-height: 92px;
+  padding: 14px;
+  text-align: left;
+}
+
+.folder-card {
+  grid-template-columns: 34px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  font-weight: 800;
+}
+
+.folder-card:hover,
+.video-card:hover,
+.ghost-button:hover,
+.breadcrumbs button:hover,
+.login-form button:hover {
+  border-color: var(--accent);
+}
+
+.folder-icon {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border-radius: 8px;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 900;
+}
+
+.video-card {
+  grid-template-rows: auto minmax(2.8em, auto) auto;
+  gap: 10px;
+}
+
+.video-thumb {
+  display: grid;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  place-items: center;
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, rgba(228, 69, 69, 0.85), rgba(88, 199, 131, 0.48)),
+    #161918;
+}
+
+.video-thumb span {
+  display: grid;
+  width: 52px;
+  height: 34px;
+  place-items: center;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 900;
+}
+
+.video-title {
+  color: var(--text);
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.video-meta,
+.empty-state,
+.form-message {
+  color: var(--muted);
+}
+
+.video-meta {
+  font-size: 0.9rem;
+}
+
+.empty-state {
+  margin: 0;
+  padding: 16px;
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+}
+
+.login-page {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+}
+
+.login-shell {
+  width: min(440px, calc(100% - 32px));
+}
+
+.login-panel {
+  padding: 24px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+}
+
+.login-form {
+  display: grid;
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.login-form button {
+  min-height: 48px;
+  border-color: var(--accent);
+  background: var(--accent);
+  font-weight: 900;
+}
+
+.form-message {
+  min-height: 1.4em;
+  margin: 0;
+}
+
+@media (max-width: 720px) {
+  .app-shell {
+    width: min(100% - 24px, 1180px);
+    padding-top: 16px;
+  }
+
+  .topbar,
+  .library-tools {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .ghost-button,
+  .search-label {
+    width: 100%;
+  }
+
+  .folder-grid,
+  .video-grid {
+    grid-template-columns: 1fr;
+  }
+
+  video {
+    max-height: 55vh;
+  }
+}

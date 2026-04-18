@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Video Play</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body class="login-page">
+    <main class="login-shell">
+      <section class="login-panel">
+        <p class="eyebrow">acesso privado</p>
+        <h1>Entre para continuar.</h1>
+        <form id="loginForm" class="login-form">
+          <label>
+            Usuario
+            <input name="username" autocomplete="username" autocapitalize="off" spellcheck="false" required autofocus>
+          </label>
+          <label>
+            Senha
+            <input name="password" type="password" autocomplete="current-password" required>
+          </label>
+          <button type="submit">Entrar</button>
+          <p id="loginMessage" class="form-message" role="alert"></p>
+        </form>
+      </section>
+    </main>
+    <script>
+      const form = document.querySelector("#loginForm");
+      const message = document.querySelector("#loginMessage");
+
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        message.textContent = "";
+        const button = form.querySelector("button");
+        button.disabled = true;
+        button.textContent = "Entrando...";
+
+        try {
+          const response = await fetch("/api/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: new URLSearchParams(new FormData(form)),
+            credentials: "same-origin"
+          });
+
+          if (response.ok) {
+            const session = await fetch("/api/me", { credentials: "same-origin" });
+            if (session.ok) {
+              window.location.href = "/";
+              return;
+            }
+
+            message.textContent = "Login aceito, mas o navegador nao salvou a sessao. Reinicie o servidor e tente novamente.";
+            return;
+          }
+
+          const data = await response.json().catch(() => ({}));
+          message.textContent = data.message || "Nao foi possivel entrar.";
+        } catch {
+          message.textContent = "Nao foi possivel conectar ao servidor.";
+        } finally {
+          button.disabled = false;
+          button.textContent = "Entrar";
+        }
+      });
+    </script>
+  </body>
+</html>

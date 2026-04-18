@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Video Play</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">biblioteca privada</p>
+          <h1>Video Play</h1>
+        </div>
+        <button id="logoutButton" class="ghost-button" type="button">Sair</button>
+      </header>
+
+      <section class="player-section">
+        <video id="player" controls playsinline preload="metadata"></video>
+        <div class="now-playing">
+          <p class="eyebrow">assistindo</p>
+          <h2 id="nowPlayingTitle">Escolha um video</h2>
+        </div>
+      </section>
+
+      <section class="library-tools">
+        <nav id="breadcrumbs" class="breadcrumbs" aria-label="Caminho"></nav>
+        <label class="search-label">
+          Buscar
+          <input id="searchInput" type="search" placeholder="Filtrar nesta pasta">
+        </label>
+      </section>
+
+      <section>
+        <h2 class="section-title">Pastas</h2>
+        <div id="folders" class="folder-grid"></div>
+      </section>
+
+      <section>
+        <h2 class="section-title">Videos</h2>
+        <div id="videos" class="video-grid"></div>
+      </section>
+    </main>
+    <script src="/app.js"></script>
+  </body>
+</html>
