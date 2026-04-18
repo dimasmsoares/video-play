@@ -116,11 +116,29 @@ function renderVideos(videos) {
 }
 
 function playVideo(video) {
+  nowPlayingTitle.textContent = `Carregando ${video.name}`;
   player.src = video.streamUrl;
-  nowPlayingTitle.textContent = video.name;
-  player.play().catch(() => {});
+  player.load();
+  player
+    .play()
+    .then(() => {
+      nowPlayingTitle.textContent = video.name;
+    })
+    .catch(() => {
+      nowPlayingTitle.textContent = `${video.name} pronto. Toque no play do player.`;
+    });
   player.scrollIntoView({ behavior: "smooth", block: "start" });
 }
+
+player.addEventListener("error", () => {
+  const messages = {
+    1: "Reproducao cancelada.",
+    2: "Falha de rede ao carregar o video.",
+    3: "O navegador nao conseguiu decodificar este video.",
+    4: "Formato ou codec nao suportado pelo navegador."
+  };
+  nowPlayingTitle.textContent = messages[player.error?.code] || "Nao foi possivel carregar o video.";
+});
 
 function escapeHtml(value) {
   return value.replace(/[&<>"']/g, (char) => {

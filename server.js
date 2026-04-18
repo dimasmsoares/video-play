@@ -254,7 +254,7 @@ function serveStatic(req, res, pathname) {
       const isHtml = path.extname(target).toLowerCase() === ".html";
       res.writeHead(200, {
         "Content-Type": mimeTypes[path.extname(target).toLowerCase()] || "application/octet-stream",
-        "Cache-Control": isHtml ? "no-store" : "public, max-age=3600"
+        "Cache-Control": isHtml ? "no-store" : "no-store"
       });
     })
     .pipe(res);
