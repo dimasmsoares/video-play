@@ -204,7 +204,7 @@ async function listLibrary(relativePath = "") {
         path: entryRelative,
         size: stat.size,
         modifiedAt: stat.mtime.toISOString(),
-        streamUrl: `/video/${encodeURIComponent(entryRelative)}`
+        streamUrl: `/video/${toLibraryUrl(entryRelative)}`
       });
     }
   }
@@ -230,6 +230,14 @@ function buildBreadcrumbs(relativePath) {
     });
   }
   return crumbs;
+}
+
+function toLibraryUrl(relativePath) {
+  return relativePath
+    .split(path.sep)
+    .filter(Boolean)
+    .map((part) => encodeURIComponent(part))
+    .join("/");
 }
 
 function serveStatic(req, res, pathname) {
