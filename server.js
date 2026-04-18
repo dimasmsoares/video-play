@@ -252,6 +252,11 @@ function serveStatic(req, res, pathname) {
     .pipe(res);
 }
 
+function isPublicAsset(pathname) {
+  const extension = path.extname(pathname).toLowerCase();
+  return Boolean(extension) && pathname !== "/index.html";
+}
+
 async function serveVideo(req, res, videoPath) {
   const { absolute } = normalizeLibraryPath(videoPath);
   const stat = await fs.promises.stat(absolute);
@@ -331,6 +336,11 @@ async function requestHandler(req, res) {
     const pathname = decodeURIComponent(url.pathname);
 
     if (await handleAuth(req, res, pathname)) return;
+
+    if (isPublicAsset(pathname)) {
+      serveStatic(req, res, pathname);
+      return;
+    }
 
     const session = getSession(req);
 
