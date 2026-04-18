@@ -261,6 +261,7 @@ function serveStatic(req, res, pathname) {
 }
 
 function isPublicAsset(pathname) {
+  if (pathname.startsWith("/api/") || pathname.startsWith("/video/")) return false;
   const extension = path.extname(pathname).toLowerCase();
   return Boolean(extension) && pathname !== "/index.html";
 }
