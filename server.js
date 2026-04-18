@@ -279,19 +279,21 @@ async function serveVideo(req, res, videoPath) {
       "Content-Type": contentType,
       "Accept-Ranges": "bytes"
     });
+    if (req.method === "HEAD") {
+      res.end();
+      return;
+    }
     fs.createReadStream(absolute).pipe(res);
     return;
   }
 
-  const match = range.match(/bytes=(\d*)-(\d*)/);
-  if (!match) {
+  const parsedRange = parseByteRange(range, stat.size);
+  if (!parsedRange) {
     send(res, 416, "Invalid range", { "Content-Range": `bytes */${stat.size}` });
     return;
   }
 
-  const start = match[1] ? Number(match[1]) : 0;
-  const end = match[2] ? Number(match[2]) : stat.size - 1;
-
+  const { start, end } = parsedRange;
   if (start >= stat.size || end >= stat.size || start > end) {
     send(res, 416, "Range not satisfiable", { "Content-Range": `bytes */${stat.size}` });
     return;
@@ -303,7 +305,33 @@ async function serveVideo(req, res, videoPath) {
     "Content-Length": end - start + 1,
     "Content-Type": contentType
   });
+  if (req.method === "HEAD") {
+    res.end();
+    return;
+  }
   fs.createReadStream(absolute, { start, end }).pipe(res);
+}
+
+function parseByteRange(rangeHeader, size) {
+  const match = rangeHeader.match(/^bytes=(\d*)-(\d*)$/);
+  if (!match) return null;
+
+  const [, rawStart, rawEnd] = match;
+  if (!rawStart && !rawEnd) return null;
+
+  if (!rawStart) {
+    const suffixLength = Number(rawEnd);
+    if (!Number.isSafeInteger(suffixLength) || suffixLength <= 0) return null;
+    return {
+      start: Math.max(size - suffixLength, 0),
+      end: size - 1
+    };
+  }
+
+  const start = Number(rawStart);
+  const end = rawEnd ? Number(rawEnd) : size - 1;
+  if (!Number.isSafeInteger(start) || !Number.isSafeInteger(end)) return null;
+  return { start, end };
 }
 
 async function handleAuth(req, res, pathname) {
