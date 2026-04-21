@@ -1,64 +1,159 @@
 # Video Play
 
-Uma biblioteca privada de videos com login, navegacao por pastas e streaming no navegador.
+Uma biblioteca privada de vídeos com login, navegação por pastas e streaming direto no navegador. Roda sem banco de dados e sem dependências externas — apenas Node.js e os arquivos de vídeo no disco.
 
-## O que ela faz
+## Como funciona
 
-- Protege a biblioteca com usuario e senha.
-- Lista subpastas dentro da pasta configurada em `VIDEO_ROOT`.
-- Toca videos no navegador com suporte a `Range`, necessario para iPhone, iPad, Safari e avance/retrocesso no player.
-- Funciona sem banco de dados e sem dependencias externas.
+O app lê uma pasta do servidor (configurada em `VIDEO_ROOT`) e expõe seu conteúdo como uma biblioteca navegável. Cada subpasta vira uma seção, e os vídeos dentro delas aparecem em grade.
 
-Extensoes reconhecidas: `.mp4`, `.m4v`, `.webm`, `.mov`, `.mkv`, `.avi`, `.m3u8`.
+O streaming usa **HTTP Range Requests**, o que permite avançar e retroceder no player sem baixar o arquivo inteiro. Isso é necessário para que o player funcione corretamente em iPhone, iPad e Safari.
 
-Para compatibilidade maxima em celular e tablet, prefira videos `.mp4` com codec H.264 e audio AAC. Arquivos `.mkv` podem nao tocar no Safari/iOS mesmo aparecendo na biblioteca.
+O login é protegido por senha com hash `scrypt`. A sessão é mantida via cookie assinado com HMAC — sem banco de dados, sem estado no servidor.
 
-## Rodar localmente
+Formatos reconhecidos: `.mp4`, `.m4v`, `.webm`, `.mov`, `.mkv`, `.avi`, `.m3u8`.
+
+> Para compatibilidade máxima em celular e tablet, prefira arquivos `.mp4` com codec **H.264** e áudio **AAC**. Arquivos `.mkv` podem não tocar no Safari/iOS mesmo aparecendo na biblioteca.
+
+---
+
+## Pré-requisitos
+
+- **Node.js >= 20** — [nodejs.org](https://nodejs.org)
+- Uma pasta de vídeos no servidor
+
+Verifique a versão instalada:
 
 ```bash
-npm start
+node --version
 ```
 
-Abra `http://localhost:3000`.
+---
 
-Credenciais padrao apenas para teste:
+## Rodando localmente (desenvolvimento)
 
-- Usuario: `admin`
-- Senha: `admin`
+Clone o repositório e crie o arquivo de configuração:
 
-Antes de expor na internet, configure senha forte e segredo de sessao.
+```bash
+git clone <seu-repositorio> video-play
+cd video-play
+cp .env.example .env
+```
 
-## Gerar hash de senha
+Edite o `.env` e aponte `VIDEO_ROOT` para a pasta com seus vídeos. Em seguida:
+
+```bash
+npm run dev
+```
+
+Acesse `http://localhost:3000`. As credenciais padrão são `admin` / `admin` — servem apenas para teste local.
+
+---
+
+## Configuração
+
+Todas as configurações são feitas via variáveis de ambiente, definidas no arquivo `.env`.
+
+### Variáveis disponíveis
+
+| Variável | Descrição | Exemplo |
+|---|---|---|
+| `PORT` | Porta HTTP do servidor | `3000` |
+| `NODE_ENV` | Modo de execução | `production` |
+| `VIDEO_ROOT` | Caminho absoluto da pasta de vídeos | `/srv/videos` |
+| `APP_USERNAME` | Nome de usuário para login | `admin` |
+| `APP_PASSWORD` | Senha em texto puro (só para dev) | `admin` |
+| `APP_PASSWORD_HASH` | Senha com hash (recomendado para produção) | `scrypt:...` |
+| `SESSION_SECRET` | Chave secreta para assinar os cookies de sessão | string aleatória longa |
+| `TRUST_PROXY` | Defina `true` se usar Nginx ou outro proxy reverso na frente | `true` |
+
+### Gerando um hash de senha
+
+Nunca use senha em texto puro em produção. Gere um hash com:
 
 ```bash
 npm run hash-password -- "sua-senha-forte"
 ```
 
-Copie o valor gerado para `APP_PASSWORD_HASH`.
+O comando imprime um valor no formato `scrypt:salt:hash`. Copie esse valor para `APP_PASSWORD_HASH` no `.env` e remova a linha `APP_PASSWORD`.
 
-## Variaveis de ambiente
+### Gerando um SESSION_SECRET
+
+O `SESSION_SECRET` é a chave que assina os cookies de autenticação. Use uma string aleatória longa:
 
 ```bash
-PORT=3000
-NODE_ENV=production
-VIDEO_ROOT=/srv/videos
-APP_USERNAME=seu-usuario
-APP_PASSWORD_HASH=scrypt:...
-SESSION_SECRET=uma-string-aleatoria-grande
+node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
 ```
 
-`VIDEO_ROOT` deve apontar para a pasta da VPS que contem suas subpastas de videos.
+Cole o resultado no `.env`.
+
+---
+
+## Deploy em servidor (sem Docker) com PM2
+
+O PM2 é um gerenciador de processos que mantém o app rodando e o reinicia automaticamente após falhas ou reinicializações do servidor.
+
+**1. Instale o PM2 globalmente:**
+
+```bash
+npm install -g pm2
+```
+
+**2. Clone o projeto e configure:**
+
+```bash
+git clone <seu-repositorio> video-play
+cd video-play
+cp .env.example .env
+nano .env   # edite as variáveis conforme a seção anterior
+```
+
+**3. Carregue as variáveis de ambiente e inicie o app:**
+
+```bash
+set -a && . ./.env && set +a
+pm2 start server.js --name video-play
+```
+
+**4. Salve a lista de processos e configure a inicialização automática no boot:**
+
+```bash
+pm2 save
+pm2 startup
+```
+
+O `pm2 startup` vai imprimir um comando com `sudo` — copie e execute esse comando para registrar o PM2 como serviço do sistema. Depois disso, o app vai iniciar automaticamente ao ligar o servidor.
+
+**Comandos úteis do PM2:**
+
+```bash
+pm2 list                  # Lista os processos rodando
+pm2 logs video-play       # Exibe os logs em tempo real
+pm2 restart video-play    # Reinicia o app (após atualizar o código, por exemplo)
+pm2 stop video-play       # Para o app
+```
+
+---
 
 ## Deploy com Docker
 
-Na VPS:
+**1. Clone e configure:**
 
 ```bash
 git clone <seu-repositorio> video-play
 cd video-play
 cp .env.example .env
 nano .env
+```
+
+**2. Build da imagem:**
+
+```bash
 docker build -t video-play .
+```
+
+**3. Inicie o container:**
+
+```bash
 docker run -d \
   --name video-play \
   --restart unless-stopped \
@@ -68,31 +163,21 @@ docker run -d \
   video-play
 ```
 
-Use `:ro` para montar a pasta de videos como somente leitura dentro do container.
+O flag `:ro` monta a pasta de vídeos como somente leitura dentro do container — o app nunca modifica os arquivos originais.
 
-## Deploy sem Docker, com PM2
-
-```bash
-cd video-play
-npm install --omit=dev
-npm run hash-password -- "sua-senha-forte"
-```
-
-Crie um arquivo `.env` e rode:
+**Comandos úteis:**
 
 ```bash
-set -a
-. ./.env
-set +a
-npm install -g pm2
-pm2 start server.js --name video-play
-pm2 save
-pm2 startup
+docker logs -f video-play     # Logs em tempo real
+docker restart video-play     # Reinicia o container
+docker stop video-play        # Para o container
 ```
 
-## Nginx com HTTPS
+---
 
-Exemplo de reverse proxy:
+## Proxy reverso com Nginx e HTTPS
+
+Em produção, coloque o Nginx na frente para terminar o HTTPS e repassar as requisições para o app. Crie um arquivo de configuração em `/etc/nginx/sites-available/video-play`:
 
 ```nginx
 server {
@@ -111,16 +196,23 @@ server {
 }
 ```
 
-Depois configure HTTPS com Certbot:
+Ative o site e configure HTTPS com Certbot:
 
 ```bash
-certbot --nginx -d videos.seudominio.com
+sudo ln -s /etc/nginx/sites-available/video-play /etc/nginx/sites-enabled/
+sudo nginx -t && sudo systemctl reload nginx
+sudo certbot --nginx -d videos.seudominio.com
 ```
 
-## Seguranca basica
+Quando usar Nginx na frente, defina `TRUST_PROXY=true` no `.env` para que os cookies de sessão usem o flag `Secure` corretamente.
 
-- Use HTTPS sempre.
-- Troque `APP_USERNAME`, `APP_PASSWORD_HASH` e `SESSION_SECRET`.
-- Nao exponha a porta `3000` diretamente se puder usar Nginx na frente.
-- Mantenha a pasta de videos montada como somente leitura.
-- Para algo mais robusto no futuro, o proximo passo natural e adicionar usuarios em banco, capas/posters e progresso de reproducao.
+---
+
+## Checklist de segurança antes de expor na internet
+
+- [ ] Trocar `APP_USERNAME` e definir `APP_PASSWORD_HASH` (nunca usar `APP_PASSWORD` em produção)
+- [ ] Gerar um `SESSION_SECRET` aleatório e longo
+- [ ] Usar HTTPS (via Nginx + Certbot)
+- [ ] Definir `TRUST_PROXY=true` se houver proxy reverso
+- [ ] Não expor a porta `3000` diretamente — deixe o Nginx como ponto de entrada
+- [ ] Montar a pasta de vídeos como somente leitura (`:ro` no Docker, ou permissões de SO no PM2)
