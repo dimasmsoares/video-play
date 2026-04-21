@@ -145,8 +145,14 @@ function clearSessionCookie(res) {
   res.setHeader("Set-Cookie", `${SESSION_COOKIE}=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0`);
 }
 
+const SECURITY_HEADERS = {
+  "X-Content-Type-Options": "nosniff",
+  "X-Frame-Options": "DENY",
+  "Referrer-Policy": "no-referrer"
+};
+
 function send(res, status, body, headers = {}) {
-  res.writeHead(status, headers);
+  res.writeHead(status, { ...SECURITY_HEADERS, ...headers });
   res.end(body);
 }
 
@@ -251,10 +257,10 @@ function serveStatic(req, res, pathname) {
   fs.createReadStream(target)
     .on("error", () => send(res, 404, "Not found"))
     .on("open", () => {
-      const isHtml = path.extname(target).toLowerCase() === ".html";
       res.writeHead(200, {
+        ...SECURITY_HEADERS,
         "Content-Type": mimeTypes[path.extname(target).toLowerCase()] || "application/octet-stream",
-        "Cache-Control": isHtml ? "no-store" : "no-store"
+        "Cache-Control": "no-store"
       });
     })
     .pipe(res);
@@ -275,6 +281,7 @@ async function serveVideo(req, res, videoPath) {
 
   if (!range) {
     res.writeHead(200, {
+      ...SECURITY_HEADERS,
       "Content-Length": stat.size,
       "Content-Type": contentType,
       "Accept-Ranges": "bytes"
@@ -300,6 +307,7 @@ async function serveVideo(req, res, videoPath) {
   }
 
   res.writeHead(206, {
+    ...SECURITY_HEADERS,
     "Content-Range": `bytes ${start}-${end}/${stat.size}`,
     "Accept-Ranges": "bytes",
     "Content-Length": end - start + 1,
@@ -334,14 +342,37 @@ function parseByteRange(rangeHeader, size) {
   return { start, end };
 }
 
+const LOGIN_MAX_ATTEMPTS = 10;
+const LOGIN_WINDOW_MS = 15 * 60 * 1000;
+const loginAttempts = new Map();
+
+function isRateLimited(ip) {
+  const now = Date.now();
+  const entry = loginAttempts.get(ip);
+  if (!entry || now >= entry.resetAt) {
+    loginAttempts.set(ip, { count: 1, resetAt: now + LOGIN_WINDOW_MS });
+    return false;
+  }
+  entry.count += 1;
+  return entry.count > LOGIN_MAX_ATTEMPTS;
+}
+
 async function handleAuth(req, res, pathname) {
   if (pathname === "/api/login" && req.method === "POST") {
+    const ip = (TRUST_PROXY ? req.headers["x-forwarded-for"]?.split(",")[0].trim() : null) || req.socket.remoteAddress || "";
+
+    if (isRateLimited(ip)) {
+      sendJson(res, 429, { ok: false, message: "Muitas tentativas. Tente novamente em 15 minutos." });
+      return true;
+    }
+
     const body = new URLSearchParams(await readRequestBody(req));
     const username = body.get("username") || "";
     const password = body.get("password") || "";
 
     if (safeCompare(username, USERNAME) && verifyPassword(password)) {
       console.log(`Login ok for ${username}`);
+      loginAttempts.delete(ip);
       setSessionCookie(res, createSession(username));
       sendJson(res, 200, { ok: true });
       return true;
@@ -412,7 +443,7 @@ async function requestHandler(req, res) {
     serveStatic(req, res, pathname);
   } catch (error) {
     console.error(error);
-    sendJson(res, 500, { message: "Erro interno.", detail: error.message });
+    sendJson(res, 500, { message: "Erro interno." });
   }
 }
 
