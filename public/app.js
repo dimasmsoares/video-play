@@ -29,6 +29,15 @@ function formatBytes(bytes) {
   return `${value.toFixed(value >= 10 || unitIndex === 0 ? 0 : 1)} ${units[unitIndex]}`;
 }
 
+function formatDuration(seconds) {
+  if (!seconds || !isFinite(seconds)) return "";
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = Math.floor(seconds % 60);
+  if (h > 0) return `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  return `${m}:${String(s).padStart(2, "0")}`;
+}
+
 function updateUrl(path) {
   const url = new URL(window.location.href);
   if (path) url.searchParams.set("path", path);
@@ -209,6 +218,12 @@ function renderVideos(videos) {
     const meta = document.createElement("span");
     meta.className = "video-meta";
 
+    const durationEl = document.createElement("span");
+    durationEl.className = "video-duration";
+    const knownDuration = videoDurations[video.path];
+    if (knownDuration) durationEl.textContent = formatDuration(knownDuration);
+    meta.appendChild(durationEl);
+
     const sizeEl = document.createElement("span");
     sizeEl.textContent = formatBytes(video.size);
     meta.appendChild(sizeEl);
@@ -246,6 +261,11 @@ function renderVideos(videos) {
         const thumb = entry.target;
         thumbObserver.unobserve(thumb);
         generateThumb(thumb.dataset.path, thumb.dataset.stream).then((dataUrl) => {
+          const dur = videoDurations[thumb.dataset.path];
+          if (dur) {
+            const el = thumb.closest(".video-card")?.querySelector(".video-duration");
+            if (el) el.textContent = formatDuration(dur);
+          }
           if (!dataUrl) return;
           const img = document.createElement("img");
           img.src = dataUrl;
@@ -305,9 +325,7 @@ function generateThumb(videoPath, streamUrl) {
           videoDurations[videoPath] = video.duration;
         }
         video.currentTime =
-          video.duration > 0 && isFinite(video.duration)
-            ? Math.min(5, video.duration * 0.1)
-            : 0;
+          video.duration > 20 ? 20 : video.duration > 0 ? video.duration / 2 : 0;
       },
       { once: true }
     );

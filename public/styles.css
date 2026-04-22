@@ -378,6 +378,13 @@ input {
   background: var(--panel-soft);
 }
 
+/* Duration label on video card */
+.video-duration:not(:empty) {
+  color: var(--green);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
 /* Rating badge on video card */
 .video-rating-badge {
   position: relative;
