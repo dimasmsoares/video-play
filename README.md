@@ -160,10 +160,11 @@ docker run -d \
   --env-file .env \
   -p 3000:3000 \
   -v /caminho/da/sua/pasta/de/videos:/srv/videos:ro \
+  -v /caminho/para/dados:/app/data \
   video-play
 ```
 
-O flag `:ro` monta a pasta de vídeos como somente leitura dentro do container — o app nunca modifica os arquivos originais.
+O flag `:ro` monta a pasta de vídeos como somente leitura — o app nunca modifica os arquivos originais. O volume `/app/data` persiste as notas atribuídas aos vídeos entre reinicializações do container.
 
 **Comandos úteis:**
 

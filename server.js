@@ -9,6 +9,7 @@ loadEnvFile(path.join(__dirname, ".env"));
 const PORT = Number(process.env.PORT || 3000);
 const VIDEO_ROOT = path.resolve(process.env.VIDEO_ROOT || path.join(__dirname, "videos"));
 const PUBLIC_ROOT = path.join(__dirname, "public");
+const RATINGS_FILE = path.join(__dirname, "data", "ratings.json");
 const USERNAME = process.env.APP_USERNAME || "admin";
 const PASSWORD = process.env.APP_PASSWORD || "admin";
 const PASSWORD_HASH = process.env.APP_PASSWORD_HASH || "";
@@ -194,10 +195,18 @@ async function listLibrary(relativePath = "") {
     const entryRelative = path.join(relative, entry.name);
 
     if (entry.isDirectory()) {
+      let videoCount = 0;
+      try {
+        const subEntries = await fs.promises.readdir(entryAbsolute, { withFileTypes: true });
+        videoCount = subEntries.filter(
+          (e) => e.isFile() && videoExtensions.has(path.extname(e.name).toLowerCase())
+        ).length;
+      } catch { /* ignore unreadable directories */ }
       folders.push({
         name: entry.name,
         path: entryRelative,
-        url: `/api/library?path=${encodeURIComponent(entryRelative)}`
+        url: `/api/library?path=${encodeURIComponent(entryRelative)}`,
+        videoCount
       });
       continue;
     }
@@ -342,6 +351,24 @@ function parseByteRange(rangeHeader, size) {
   return { start, end };
 }
 
+let ratingsCache = null;
+
+async function loadRatings() {
+  if (ratingsCache) return ratingsCache;
+  try {
+    const data = await fs.promises.readFile(RATINGS_FILE, "utf8");
+    ratingsCache = JSON.parse(data);
+  } catch {
+    ratingsCache = {};
+  }
+  return ratingsCache;
+}
+
+async function saveRatings(ratings) {
+  await fs.promises.mkdir(path.dirname(RATINGS_FILE), { recursive: true });
+  await fs.promises.writeFile(RATINGS_FILE, JSON.stringify(ratings, null, 2), "utf8");
+}
+
 const LOGIN_MAX_ATTEMPTS = 10;
 const LOGIN_WINDOW_MS = 15 * 60 * 1000;
 const loginAttempts = new Map();
@@ -432,6 +459,39 @@ async function requestHandler(req, res) {
 
     if (pathname === "/api/library") {
       sendJson(res, 200, await listLibrary(url.searchParams.get("path") || ""));
+      return;
+    }
+
+    if (pathname === "/api/ratings" && req.method === "GET") {
+      sendJson(res, 200, await loadRatings());
+      return;
+    }
+
+    if (pathname === "/api/ratings" && req.method === "POST") {
+      let body;
+      try {
+        body = JSON.parse(await readRequestBody(req));
+      } catch {
+        sendJson(res, 400, { message: "JSON inválido." });
+        return;
+      }
+      const { path: videoPath, rating } = body;
+      if (typeof videoPath !== "string" || !videoPath.trim()) {
+        sendJson(res, 400, { message: "Caminho inválido." });
+        return;
+      }
+      if (rating !== null && rating !== undefined && (typeof rating !== "number" || rating < 0 || rating > 10)) {
+        sendJson(res, 400, { message: "Nota deve ser entre 0 e 10." });
+        return;
+      }
+      const ratings = await loadRatings();
+      if (rating === null || rating === undefined) {
+        delete ratings[videoPath];
+      } else {
+        ratings[videoPath] = rating;
+      }
+      await saveRatings(ratings);
+      sendJson(res, 200, { ok: true });
       return;
     }
 
