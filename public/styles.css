@@ -115,6 +115,21 @@ video {
   min-height: 58px;
 }
 
+.player-rating {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.player-rating-label {
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 700;
+  margin-right: 4px;
+}
+
 .now-playing h2,
 .section-title {
   margin: 0;

@@ -22,6 +22,8 @@ Single-file backend (`server.js`) with a plain Node.js HTTP server — no framew
 **Request routing** is handled manually in `server.js`. Key routes:
 - `GET /login.html`, `POST /api/login`, `POST /api/logout` — auth
 - `GET /api/library?path=...` — directory listing (folders + videos)
+- `GET /api/ratings` — fetch all ratings (returns `{ [videoPath]: number }`)
+- `POST /api/ratings` — set or clear a rating (`{ path, rating }`, rating `null` removes it)
 - `GET /video/<encoded-path>` — video file streaming with HTTP range support
 - `GET /public/*` — static assets served without auth check
 
@@ -31,7 +33,7 @@ Single-file backend (`server.js`) with a plain Node.js HTTP server — no framew
 
 **Path safety**: All file paths are resolved with `path.resolve` and validated against `VIDEO_ROOT` to prevent directory traversal. Encoded path segments in video URLs are decoded with `decodeURIComponent`.
 
-**Frontend** (`public/`) is vanilla JS + HTML5 + CSS. `app.js` handles client-side folder navigation (replaces history state), video grid rendering, and search filtering. The video player is a native `<video>` element; the `src` is set dynamically to `/video/<encoded-path>`. UI language is Portuguese.
+**Frontend** (`public/`) is vanilla JS + HTML5 + CSS. `app.js` handles client-side folder navigation (replaces history state), video grid rendering, search filtering, and ratings. The video player is a native `<video>` element; the `src` is set dynamically to `/video/<encoded-path>`. Ratings (0–10) can be set from the video card or from the inline controls below the player. UI language is Portuguese.
 
 ## Environment Variables
 

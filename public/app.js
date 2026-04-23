@@ -11,6 +11,7 @@ let currentData = null;
 let currentPath = new URLSearchParams(window.location.search).get("path") || "";
 let currentRatings = {};
 let currentSort = "name";
+let currentVideo = null;
 const videoDurations = {};
 const thumbCache = new Map();
 let thumbObserver = null;
@@ -418,9 +419,41 @@ async function setRating(videoPath, rating) {
     currentRatings[videoPath] = rating;
   }
   render();
+  renderPlayerRating();
+}
+
+function renderPlayerRating() {
+  const container = document.querySelector("#playerRating");
+  if (!currentVideo) {
+    container.replaceChildren();
+    return;
+  }
+
+  const label = document.createElement("span");
+  label.className = "player-rating-label";
+  label.textContent = "Nota:";
+
+  const buttons = [];
+  for (let i = 0; i <= 10; i++) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = `rating-opt${currentRatings[currentVideo.path] === i ? " active" : ""}`;
+    btn.textContent = i;
+    btn.addEventListener("click", () => setRating(currentVideo.path, i));
+    buttons.push(btn);
+  }
+
+  const clearBtn = document.createElement("button");
+  clearBtn.type = "button";
+  clearBtn.className = "rating-opt rating-opt-clear";
+  clearBtn.textContent = "×";
+  clearBtn.addEventListener("click", () => setRating(currentVideo.path, null));
+
+  container.replaceChildren(label, ...buttons, clearBtn);
 }
 
 function playVideo(video) {
+  currentVideo = video;
   nowPlayingTitle.textContent = `Carregando ${video.name}`;
   player.src = video.streamUrl;
   player.load();
@@ -432,6 +465,7 @@ function playVideo(video) {
     .catch(() => {
       nowPlayingTitle.textContent = `${video.name} pronto. Toque no play do player.`;
     });
+  renderPlayerRating();
   player.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 

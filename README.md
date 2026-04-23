@@ -10,6 +10,8 @@ O streaming usa **HTTP Range Requests**, o que permite avançar e retroceder no 
 
 O login é protegido por senha com hash `scrypt`. A sessão é mantida via cookie assinado com HMAC — sem banco de dados, sem estado no servidor.
 
+Cada vídeo pode receber uma **nota de 0 a 10**, atribuída tanto pelo card na grade quanto logo abaixo do player durante a reprodução. As notas ficam salvas em `data/ratings.json` e podem ser usadas para ordenar os vídeos.
+
 Formatos reconhecidos: `.mp4`, `.m4v`, `.webm`, `.mov`, `.mkv`, `.avi`, `.m3u8`.
 
 > Para compatibilidade máxima em celular e tablet, prefira arquivos `.mp4` com codec **H.264** e áudio **AAC**. Arquivos `.mkv` podem não tocar no Safari/iOS mesmo aparecendo na biblioteca.
