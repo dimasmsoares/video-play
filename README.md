@@ -12,6 +12,8 @@ O login é protegido por senha com hash `scrypt`. A sessão é mantida via cooki
 
 Cada vídeo pode receber uma **nota de 0 a 10**, atribuída tanto pelo card na grade quanto logo abaixo do player durante a reprodução. As notas ficam salvas em `data/ratings.json` e podem ser usadas para ordenar os vídeos.
 
+Os vídeos podem ser ordenados por **nome, tamanho, duração ou nota**. Clicar num critério o ativa com a direção padrão (nome: A→Z; demais: maior primeiro). Clicar novamente no critério ativo inverte a direção — a seta no botão indica o sentido atual.
+
 Formatos reconhecidos: `.mp4`, `.m4v`, `.webm`, `.mov`, `.mkv`, `.avi`, `.m3u8`.
 
 > Para compatibilidade máxima em celular e tablet, prefira arquivos `.mp4` com codec **H.264** e áudio **AAC**. Arquivos `.mkv` podem não tocar no Safari/iOS mesmo aparecendo na biblioteca.

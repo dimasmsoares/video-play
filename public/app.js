@@ -11,6 +11,7 @@ let currentData = null;
 let currentPath = new URLSearchParams(window.location.search).get("path") || "";
 let currentRatings = {};
 let currentSort = "name";
+let currentSortDir = "asc";
 let currentVideo = null;
 const videoDurations = {};
 const thumbCache = new Map();
@@ -132,6 +133,8 @@ function renderFolders(folders) {
   );
 }
 
+const defaultSortDir = { name: "asc", size: "desc", duration: "desc", rating: "desc" };
+
 function renderSortControls() {
   const options = [
     { key: "name", label: "Nome" },
@@ -142,12 +145,20 @@ function renderSortControls() {
 
   sortControls.replaceChildren(
     ...options.map(({ key, label }) => {
+      const isActive = currentSort === key;
       const btn = document.createElement("button");
       btn.type = "button";
-      btn.className = `sort-btn${currentSort === key ? " active" : ""}`;
-      btn.textContent = label;
+      btn.className = `sort-btn${isActive ? " active" : ""}`;
+      btn.textContent = isActive
+        ? `${label} ${currentSortDir === "asc" ? "↑" : "↓"}`
+        : label;
       btn.addEventListener("click", () => {
-        currentSort = key;
+        if (currentSort === key) {
+          currentSortDir = currentSortDir === "asc" ? "desc" : "asc";
+        } else {
+          currentSort = key;
+          currentSortDir = defaultSortDir[key];
+        }
         render();
       });
       return btn;
@@ -157,9 +168,10 @@ function renderSortControls() {
 
 function sortVideos(videos) {
   const sorted = [...videos];
+  const dir = currentSortDir === "asc" ? 1 : -1;
 
   if (currentSort === "size") {
-    sorted.sort((a, b) => b.size - a.size);
+    sorted.sort((a, b) => dir * (a.size - b.size));
   } else if (currentSort === "duration") {
     sorted.sort((a, b) => {
       const da = videoDurations[a.path] ?? -1;
@@ -167,7 +179,7 @@ function sortVideos(videos) {
       if (da < 0 && db < 0) return a.name.localeCompare(b.name);
       if (da < 0) return 1;
       if (db < 0) return -1;
-      return db - da;
+      return dir * (da - db);
     });
   } else if (currentSort === "rating") {
     sorted.sort((a, b) => {
@@ -176,10 +188,10 @@ function sortVideos(videos) {
       if (ra < 0 && rb < 0) return a.name.localeCompare(b.name);
       if (ra < 0) return 1;
       if (rb < 0) return -1;
-      return rb - ra;
+      return dir * (ra - rb);
     });
   } else {
-    sorted.sort((a, b) => a.name.localeCompare(b.name));
+    sorted.sort((a, b) => dir * a.name.localeCompare(b.name));
   }
 
   return sorted;

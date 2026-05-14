@@ -33,7 +33,9 @@ Single-file backend (`server.js`) with a plain Node.js HTTP server — no framew
 
 **Path safety**: All file paths are resolved with `path.resolve` and validated against `VIDEO_ROOT` to prevent directory traversal. Encoded path segments in video URLs are decoded with `decodeURIComponent`.
 
-**Frontend** (`public/`) is vanilla JS + HTML5 + CSS. `app.js` handles client-side folder navigation (replaces history state), video grid rendering, search filtering, and ratings. The video player is a native `<video>` element; the `src` is set dynamically to `/video/<encoded-path>`. Ratings (0–10) can be set from the video card or from the inline controls below the player. UI language is Portuguese.
+**Frontend** (`public/`) is vanilla JS + HTML5 + CSS. `app.js` handles client-side folder navigation (replaces history state), video grid rendering, search filtering, ratings, and sort controls. The video player is a native `<video>` element; the `src` is set dynamically to `/video/<encoded-path>`. Ratings (0–10) can be set from the video card or from the inline controls below the player. UI language is Portuguese.
+
+**Sort controls**: `currentSort` (name/size/duration/rating) and `currentSortDir` (asc/desc) drive `sortVideos()`. Clicking an inactive sort button activates it with its default direction (`defaultSortDir` map); clicking the active button toggles direction. The active button label shows ↑/↓.
 
 ## Environment Variables
 
